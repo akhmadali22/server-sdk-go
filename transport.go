@@ -17,6 +17,7 @@ package lksdk
 import (
 	"errors"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -97,6 +98,10 @@ func NewPCTransport(configuration webrtc.Configuration) (*PCTransport, error) {
 
 	se := webrtc.SettingEngine{}
 	se.SetSRTPProtectionProfiles(dtls.SRTP_AEAD_AES_128_GCM, dtls.SRTP_AES128_CM_HMAC_SHA1_80)
+	se.SetIPFilter(func(ip net.IP) bool {
+		_, cidr, _ := net.ParseCIDR("192.168.0.0/16")
+		return cidr.Contains(ip)
+	})
 
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(m), webrtc.WithSettingEngine(se), webrtc.WithInterceptorRegistry(i))
 	pc, err := api.NewPeerConnection(configuration)
